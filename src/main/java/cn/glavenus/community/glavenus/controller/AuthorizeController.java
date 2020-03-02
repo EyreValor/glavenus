@@ -1,12 +1,11 @@
 package cn.glavenus.community.glavenus.controller;
 
-import cn.glavenus.community.glavenus.dto.AccessTokenDTO;
 import cn.glavenus.community.glavenus.dto.GithubUser;
 import cn.glavenus.community.glavenus.mapper.UserMapper;
 import cn.glavenus.community.glavenus.model.User;
-import cn.glavenus.community.glavenus.provider.GithubProvider;
+import cn.glavenus.community.glavenus.service.IAuthorizeService;
+import cn.glavenus.community.glavenus.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,68 +23,53 @@ import java.util.UUID;
 public class AuthorizeController {
 
     @Autowired
-    private GithubProvider githubProvider;
+    private IAuthorizeService authorizeServiceimpl;
+
+    @Autowired
+    private IUserService userServiceimpl;
 
     @Autowired
     private UserMapper userMapper;
 
-    @Value("${github.client.id}")
-    private String clientId;
-    @Value("${github.client.secret}")
-    private String clientSecret;
-    @Value("${github.redirect.url}")
-    private String redirectUrl;
 
     @GetMapping("callback")
     public String callback(@RequestParam(name = "code") String code,
                            @RequestParam(name = "state") String state,
                            HttpServletRequest request,
                            HttpServletResponse response) throws IOException {
-        //封装DTO
-        AccessTokenDTO accessTokenDTO = new AccessTokenDTO();
-        accessTokenDTO.setClient_id(clientId);
-        accessTokenDTO.setClient_secret(clientSecret);
-        accessTokenDTO.setCode(code);
-        accessTokenDTO.setRedirect_url(redirectUrl);
-        accessTokenDTO.setState(state);
-        //获取token
-        String accessToken = githubProvider.getAccessToken(accessTokenDTO);
-        //获取githubUser
-        GithubUser githubUser = githubProvider.getGithubUser(accessToken);
-        if (githubUser != null){
+        //获取accessToken
+        String accessToken = authorizeServiceimpl.getAccessToken(code, state);
+        //获取GithubUser
+        GithubUser githubUser = authorizeServiceimpl.getGithubUser(accessToken);
+
+        if (githubUser != null) {
             //查询数据库是否有创建账户
-            User user = userMapper.findByUser(String.valueOf(githubUser.getId()));
-            if(user==null){
-                //如果数据库中没有创建账户
-                user = new User();
-                user.setName(githubUser.getName());
-                user.setAccountId(String.valueOf(githubUser.getId()));
-                String setToken = UUID.randomUUID().toString();
-                //将cookie写入数据库持久保存
-                user.setToken(setToken);
-                user.setGmtCreate(System.currentTimeMillis());
-                user.setGmtModified(user.getGmtCreate());
-                //将用户数据写入数据库
-                userMapper.insert(user);
+            User user = userServiceimpl.getUserByAccountId(String.valueOf(githubUser.getId()));
+            if (user == null) {
+                String token = UUID.randomUUID().toString();
+                userServiceimpl.createUser(githubUser, user, token);
                 //自定义cookie
-                Cookie token = new Cookie("token", setToken);
-                token.setMaxAge(60*60*24*7);//设置cookie时间为7天
-                response.addCookie(token);
+                setCookie(token, response);
                 return "redirect:/";
-            }else{
+            } else {
                 //如果有创建账户  设置全新token写入账户
-                String setToken = UUID.randomUUID().toString();
-                int i = userMapper.updateToken(setToken,String.valueOf(githubUser.getId()));
-                user.setToken(setToken);
-                Cookie token = new Cookie("token", setToken);
-                token.setMaxAge(60*60*24*7);
-                response.addCookie(token);
+                String token = UUID.randomUUID().toString();
+                userServiceimpl.updateToken(token, String.valueOf(githubUser.getId()));
+                user.setToken(token);
+                setCookie(token,response);
                 request.getSession().setAttribute("user", user);
                 return "redirect:/";
             }
-        }else{
+        } else {
             //登录失败
             return "redirect:/";
         }
+    }
+
+    //设置cookie
+    private void setCookie(String setToken, HttpServletResponse response) {
+        Cookie token = new Cookie("token", setToken);
+        token.setMaxAge(60 * 60 * 24 * 7);//设置cookie时间为7天
+        response.addCookie(token);
     }
 }

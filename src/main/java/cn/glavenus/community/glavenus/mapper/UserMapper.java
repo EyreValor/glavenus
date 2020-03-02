@@ -15,7 +15,7 @@ public interface UserMapper {
      * @param user
      */
     @Insert("INSERT INTO user (account_id, name, token, gmt_create, gmt_modified) values (#{accountId},#{name},#{token},#{gmtCreate},#{gmtModified})")
-    void insert(User user);
+    Integer insert(User user);
 
     /**
      * 根据token查询用户信息
@@ -49,6 +49,6 @@ public interface UserMapper {
      * @param accountId
      */
     @Update("update user set token=#{token} where account_id=#{accountId}")
-    int updateToken(@Param("token") String token,
+    Integer updateToken(@Param("token") String token,
                     @Param("accountId") String accountId);
 }
