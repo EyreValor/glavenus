@@ -18,21 +18,25 @@ public class UserServiceImpl implements IUserService {
     @Autowired
     private UserMapper userMapper;
 
-
+    /**
+     * 获取本地数据库用户信息
+     * @param accountId
+     * @return
+     */
     @Override
     public User getUserByAccountId(String accountId) {
         User user = findByUser(accountId);
         return user;
     }
 
+    /**
+     * 根据guthub的账户信息创建USer
+     * @param githubUser
+     * @param user
+     * @param token
+     */
     @Override
-    public User getUserByToken(String token) {
-
-        return findUserByToken(token);
-    }
-
-    @Override
-    public void createUser(GithubUser githubUser,User user,String token) {
+    public void createUser(GithubUser githubUser, User user, String token) {
         //如果数据库中没有创建账户
         user = new User();
         user.setName(githubUser.getName());
@@ -41,57 +45,41 @@ public class UserServiceImpl implements IUserService {
         user.setToken(token);
         user.setGmtCreate(System.currentTimeMillis());
         user.setGmtModified(user.getGmtCreate());
+        user.setAvatarUrl(githubUser.getAvatar_url());
         //将用户数据写入数据库
         insertUser(user);
     }
 
+    /**
+     * 根据accountId修改token
+     * @param token
+     * @param accoubtId
+     */
     @Override
     public void updateToken(String token, String accoubtId) {
-        setToken(token,accoubtId);
+        setToken(token, accoubtId);
     }
 
-    @Override
-    public void setLoginStatus(HttpServletRequest request) {
-        User user = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies!=null) {
-            for (Cookie cookie : cookies) {
-                if ("token" .equals(cookie.getName())) {
-                    String token = cookie.getValue();
-                    user = findUserByToken(token);
-                    if (user != null) {
-                        //用户不为空时写cookie 和 session
-                        request.getSession().setAttribute("user", user);
-                    }
-                    break;
-                }
-            }
-        }
-    }
 
     //将user写入数据库
-    private void insertUser(User user){
-       Integer row =  userMapper.insert(user);
-       if(!row.equals(1)){
-           //TODO
-       }
-    }
-
-    //根据accoubtId修改token
-    private void setToken(String token,String accountId){
-        Integer row = userMapper.updateToken(token, accountId);
-        if (!row.equals(1)){
+    private void insertUser(User user) {
+        Integer row = userMapper.insert(user);
+        if (!row.equals(1)) {
             //TODO
         }
     }
-    //根据token获取user
-    private User findUserByToken(String token){
-        return userMapper.findByToken(token);
+
+    //根据accoubtId修改token
+    private void setToken(String token, String accountId) {
+        Integer row = userMapper.updateToken(token, accountId);
+        if (!row.equals(1)) {
+            //TODO
+        }
     }
 
     //获取用户信息
-    private User findByUser(String accountId){
-        if (accountId == null){
+    private User findByUser(String accountId) {
+        if (accountId == null) {
             //TODO 规划异常
         }
         return userMapper.findByUser(accountId);

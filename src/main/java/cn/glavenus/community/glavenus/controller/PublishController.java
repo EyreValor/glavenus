@@ -34,6 +34,15 @@ public class PublishController {
         return "publish";
     }
 
+    /**
+     * 创建问题
+     * @param title
+     * @param description
+     * @param tag
+     * @param request
+     * @param model
+     * @return
+     */
     @PostMapping("/publish")
     public String doPublish(
             @RequestParam("title") String title,
@@ -42,58 +51,42 @@ public class PublishController {
             HttpServletRequest request,
             Model model
     ) {
-        User user = null;
-        user = getUser(request);
-        System.err.println(description);
+        User user = (User) request.getSession().getAttribute("user");
+
+        //TODO 处理异常后期移动到前端控制
         if (user == null) {
             model.addAttribute("error", "用户未登录");
-            model.addAttribute("title",title);
-            model.addAttribute("description",description);
-            model.addAttribute("tag",tag);
+            setModel(model, title, description, tag);
             return "publish";
         }
 
-        if (title==null||"".equals(title)) {
-            model.addAttribute("noTitle","标题不能为空");
-            model.addAttribute("title",title);
-            model.addAttribute("description",description);
-            model.addAttribute("tag",tag);
+        if (title == null || "".equals(title)) {
+            model.addAttribute("noTitle", "标题不能为空");
+            setModel(model, title, description, tag);
             return "publish";
         }
 
-        if (description==null||"".equals(description)) {
-            model.addAttribute("noDescription","问题补充不能为空");
-            model.addAttribute("title",title);
-            model.addAttribute("description",description);
-            model.addAttribute("tag",tag);
+        if (description == null || "".equals(description)) {
+            model.addAttribute("noDescription", "问题补充不能为空");
+            setModel(model, title, description, tag);
             return "publish";
         }
 
-        if (tag==null||"".equals(tag)) {
-            model.addAttribute("noTag","标签不能为空");
-            model.addAttribute("title",title);
-            model.addAttribute("description",description);
-            model.addAttribute("tag",tag);
+        if (tag == null || "".equals(tag)) {
+            model.addAttribute("noTag", "标签不能为空");
+            setModel(model, title, description, tag);
             return "publish";
         }
 
-        questionServiceimpl.createQuestion(title,description,tag,user);
+        //创建提问
+        questionServiceimpl.createQuestion(title, description, tag, user);
         return "redirect:/";
     }
 
-
-    private User getUser(HttpServletRequest request) {
-        User user;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("token".equals(cookie.getName())) {
-                    String token = cookie.getValue();
-                    user = userServiceimpl.getUserByToken(token);
-                    return user;
-                }
-            }
-        }
-        return null;
+    //回显问题页面内容
+    private void setModel(Model model, String title, String description, String tag) {
+        model.addAttribute("title", title);
+        model.addAttribute("description", description);
+        model.addAttribute("tag", tag);
     }
 }

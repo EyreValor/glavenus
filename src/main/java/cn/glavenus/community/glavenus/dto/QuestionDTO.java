@@ -1,17 +1,13 @@
-package cn.glavenus.community.glavenus.model;
+package cn.glavenus.community.glavenus.dto;
 
+import cn.glavenus.community.glavenus.model.User;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
-import java.util.Objects;
 
 /**
- * Creaked by EyreValor on 2020/3/1
+ * Creaked by EyreValor on 2020/3/3
  */
 @Data
-public class Question {
+public class QuestionDTO {
     private Integer id;
     private String title;
     private String description;
@@ -22,5 +18,6 @@ public class Question {
     private Integer viewCount;
     private Integer likeCount;
     private String tag;
-
+    private String userAvatarUrl;
+    private String userName;
 }

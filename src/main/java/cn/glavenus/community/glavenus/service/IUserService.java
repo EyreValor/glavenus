@@ -13,8 +13,6 @@ public interface IUserService {
      */
     User getUserByAccountId(String accountId);
 
-    User getUserByToken(String token);
-
     /**
      * 根据guthub的账户信息创建USer
      * @param githubUser
@@ -28,10 +26,4 @@ public interface IUserService {
      * @return
      */
     void updateToken(String token,String accoubtId);
-
-    /**
-     * 设置邓律师状态
-     * @param request
-     */
-    void setLoginStatus(HttpServletRequest request);
 }
