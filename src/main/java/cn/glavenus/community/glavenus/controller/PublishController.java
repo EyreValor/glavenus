@@ -1,7 +1,7 @@
 package cn.glavenus.community.glavenus.controller;
 
-import cn.glavenus.community.glavenus.mapper.QuestionMapper;
-import cn.glavenus.community.glavenus.mapper.UserMapper;
+import cn.glavenus.community.glavenus.dto.PageinationDTO;
+import cn.glavenus.community.glavenus.dto.QuestionDTO;
 import cn.glavenus.community.glavenus.model.Question;
 import cn.glavenus.community.glavenus.model.User;
 import cn.glavenus.community.glavenus.service.IQuestionService;
@@ -10,10 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -28,14 +28,31 @@ public class PublishController {
     @Autowired
     private IQuestionService questionServiceimpl;
 
-
     @GetMapping("/publish")
     public String publish() {
         return "publish";
     }
 
     /**
+     * 编辑问题功能
+     * @param id
+     * @param model
+     * @return
+     */
+    @GetMapping("/publish/{id}")
+    public String edit(@PathVariable(name = "id")Integer id,
+                       Model model) {
+        QuestionDTO questionDTO  = questionServiceimpl.getQuestionById(id);
+        model.addAttribute("title",questionDTO.getTitle());
+        model.addAttribute("description",questionDTO.getDescription());
+        model.addAttribute("tag",questionDTO.getTag());
+        model.addAttribute("id",questionDTO.getId());
+        return "publish";
+    }
+
+    /**
      * 创建问题
+     *
      * @param title
      * @param description
      * @param tag
@@ -45,9 +62,10 @@ public class PublishController {
      */
     @PostMapping("/publish")
     public String doPublish(
-            @RequestParam("title") String title,
-            @RequestParam("description") String description,
-            @RequestParam("tag") String tag,
+            @RequestParam(value = "title",required = false) String title,
+            @RequestParam(value = "description",required = false) String description,
+            @RequestParam(value = "tag",required = false) String tag,
+            @RequestParam(value = "id",required = false)Integer id,
             HttpServletRequest request,
             Model model
     ) {
@@ -78,8 +96,13 @@ public class PublishController {
             return "publish";
         }
 
+        Question question = new Question();
+        question.setTitle(title);
+        question.setDescription(description);
+        question.setTag(tag);
+        question.setId(id);
         //创建提问
-        questionServiceimpl.createQuestion(title, description, tag, user);
+        questionServiceimpl.createQuestion(question,user);
         return "redirect:/";
     }
 

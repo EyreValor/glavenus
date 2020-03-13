@@ -1,7 +1,9 @@
 package cn.glavenus.community.glavenus.interceptor;
 
 import cn.glavenus.community.glavenus.mapper.UserMapper;
+import cn.glavenus.community.glavenus.model.QuestionExample;
 import cn.glavenus.community.glavenus.model.User;
+import cn.glavenus.community.glavenus.model.UserExample;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -9,6 +11,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * Creaked by EyreValor on 2020/3/7
@@ -26,10 +29,12 @@ public class SesstonInterceptor implements HandlerInterceptor {
             for (Cookie cookie : cookies) {
                 if ("token" .equals(cookie.getName())) {
                     String token = cookie.getValue();
-                    user = userMapper.findByToken(token);
-                    if (user != null) {
+                    UserExample userExample = new UserExample();
+                    userExample.createCriteria().andTokenEqualTo(token);
+                    List<User> users = userMapper.selectByExample(userExample);
+                    if (users.size() !=0 ) {
                         //用户不为空时写cookie 和 session
-                        request.getSession().setAttribute("user", user);
+                        request.getSession().setAttribute("user", users.get(0));
                         return true;
                     }
                     break;

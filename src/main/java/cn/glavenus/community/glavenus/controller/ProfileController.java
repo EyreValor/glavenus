@@ -43,7 +43,7 @@ public class ProfileController {
             model.addAttribute("section", "question");
             model.addAttribute("sectionName", "我的提问");
             User user = (User) request.getSession().getAttribute("user");
-            PageinationDTO pageinationDTO = questionServiceImpl.getQuestions(String.valueOf(user.getId()), page);
+            PageinationDTO pageinationDTO = questionServiceImpl.getQuestions(user.getId(), page);
             model.addAttribute("pageination",pageinationDTO);
         } else if ("replies".equals(action)) {
             //返回最新回复页面

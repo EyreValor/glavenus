@@ -66,6 +66,24 @@ public class AuthorizeController {
         }
     }
 
+    /**
+     * 退出登录
+     * @param request
+     * @param response
+     * @return
+     */
+    @GetMapping("/logout")
+    public String logout(HttpServletRequest request,
+                           HttpServletResponse response){
+        Cookie newCookie = new Cookie("token",null);
+        newCookie.setMaxAge(0);
+        newCookie.setPath("/");
+        response.addCookie(newCookie);
+        request.getSession().removeAttribute("user");
+        return "redirect:/";
+
+    }
+
     //设置cookie
     private void setCookie(String setToken, HttpServletResponse response) {
         Cookie token = new Cookie("token", setToken);

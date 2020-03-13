@@ -2,17 +2,15 @@ package cn.glavenus.community.glavenus.service;
 
 import cn.glavenus.community.glavenus.dto.PageinationDTO;
 import cn.glavenus.community.glavenus.dto.QuestionDTO;
+import cn.glavenus.community.glavenus.model.Question;
 import cn.glavenus.community.glavenus.model.User;
 
 public interface IQuestionService {
 
     /**
      * 创建提问
-     * @param title
-     * @param description
-     * @param tag
      */
-    void createQuestion(String title, String description, String tag, User user);
+    void createQuestion(Question question,User user);
 
     /**
      * 查询数据库中的问题
@@ -24,7 +22,7 @@ public interface IQuestionService {
      * 根据userid查询数据库中的问题
      * @return
      */
-    PageinationDTO getQuestions(String userid,Integer page);
+    PageinationDTO getQuestions(Integer userid,Integer page);
 
     /**
      * 根据问题id获取问题详情

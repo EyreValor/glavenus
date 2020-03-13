@@ -3,12 +3,15 @@ package cn.glavenus.community.glavenus.service.impl;
 import cn.glavenus.community.glavenus.dto.GithubUser;
 import cn.glavenus.community.glavenus.mapper.UserMapper;
 import cn.glavenus.community.glavenus.model.User;
+import cn.glavenus.community.glavenus.model.UserExample;
 import cn.glavenus.community.glavenus.service.IUserService;
+import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * Creaked by EyreValor on 2020/3/2
@@ -20,17 +23,24 @@ public class UserServiceImpl implements IUserService {
 
     /**
      * 获取本地数据库用户信息
+     *
      * @param accountId
      * @return
      */
     @Override
     public User getUserByAccountId(String accountId) {
-        User user = findByUser(accountId);
-        return user;
+        UserExample userExample = new UserExample();
+        userExample.createCriteria().andAccountIdEqualTo(accountId);
+        List<User> users = userMapper.selectByExample(userExample);
+        if(users.size() == 0){
+            //TODO
+        }
+        return users.get(0);
     }
 
     /**
      * 根据guthub的账户信息创建USer
+     *
      * @param githubUser
      * @param user
      * @param token
@@ -47,42 +57,25 @@ public class UserServiceImpl implements IUserService {
         user.setGmtModified(user.getGmtCreate());
         user.setAvatarUrl(githubUser.getAvatar_url());
         //将用户数据写入数据库
-        insertUser(user);
+        userMapper.insert(user);
     }
 
     /**
      * 根据accountId修改token
+     *
      * @param token
      * @param accoubtId
      */
     @Override
     public void updateToken(String token, String accoubtId) {
-        setToken(token, accoubtId);
-    }
-
-
-    //将user写入数据库
-    private void insertUser(User user) {
-        Integer row = userMapper.insert(user);
+        UserExample userExample = new UserExample();
+        userExample.createCriteria().andAccountIdEqualTo(accoubtId);
+        User user = new User();
+        user.setToken(token);
+        Integer row = userMapper.updateByExample(user, userExample);
         if (!row.equals(1)) {
             //TODO
         }
-    }
-
-    //根据accoubtId修改token
-    private void setToken(String token, String accountId) {
-        Integer row = userMapper.updateToken(token, accountId);
-        if (!row.equals(1)) {
-            //TODO
-        }
-    }
-
-    //获取用户信息
-    private User findByUser(String accountId) {
-        if (accountId == null) {
-            //TODO 规划异常
-        }
-        return userMapper.findByUser(accountId);
     }
 
 }

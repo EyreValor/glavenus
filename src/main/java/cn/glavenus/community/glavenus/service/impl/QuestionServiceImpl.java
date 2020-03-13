@@ -5,8 +5,10 @@ import cn.glavenus.community.glavenus.dto.QuestionDTO;
 import cn.glavenus.community.glavenus.mapper.QuestionMapper;
 import cn.glavenus.community.glavenus.mapper.UserMapper;
 import cn.glavenus.community.glavenus.model.Question;
+import cn.glavenus.community.glavenus.model.QuestionExample;
 import cn.glavenus.community.glavenus.model.User;
 import cn.glavenus.community.glavenus.service.IQuestionService;
+import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,21 +34,28 @@ public class QuestionServiceImpl implements IQuestionService {
 
     /**
      * 创建提问
-     * @param title
-     * @param description
-     * @param tag
      * @param user
      */
     @Override
-    public void createQuestion(String title, String description, String tag, User user) {
-        Question question = new Question();
-        question.setTitle(title);
-        question.setDescription(description);
-        question.setTag(tag);
-        question.setCreator(user.getId());
-        question.setGmtCreate(System.currentTimeMillis());
-        question.setGmtModified(question.getGmtCreate());
-        foundQuestion(question);
+    public void createQuestion(Question parameter,User user) {
+        if (parameter.getId() == null){
+            parameter.setCreator(user.getId());
+            parameter.setGmtCreate(System.currentTimeMillis());
+            parameter.setGmtModified(parameter.getGmtCreate());
+            foundQuestion(parameter);
+        }else {
+            QuestionExample questionExample = new QuestionExample();
+            questionExample.createCriteria().andIdEqualTo(parameter.getId());
+            List<Question> question = questionMapper.selectByExample(questionExample);
+            if (!question.get(0).getCreator().equals(user.getId())){
+                //TODO 创建非法参数异常错误
+            }
+            parameter.setGmtModified(System.currentTimeMillis());
+            int row = questionMapper.updateByExample(parameter, questionExample);
+            if (row != 1){
+                //TODO 创建写入异常错误
+            }
+        }
     }
 
     /**
@@ -62,9 +71,11 @@ public class QuestionServiceImpl implements IQuestionService {
         page = limitPage(page,totalPage);
         //获取查询页码的问题列表
         Integer offset = size * (page - 1);
-        List<Question> questions = findQurstions(offset, size);
+        QuestionExample example = new QuestionExample();
+        example.setOrderByClause("gmt_create desc");
+        List<Question> questionList = questionMapper.selectByExampleWithRowbounds(example, new RowBounds(offset, size));
         //获取pageinationDto
-        PageinationDTO pageinationDTO = getPageinationDTO(questions,page,totalPage);
+        PageinationDTO pageinationDTO = getPageinationDTO(questionList,page,totalPage);
         //返回问题列表
         return pageinationDTO;
     }
@@ -76,15 +87,18 @@ public class QuestionServiceImpl implements IQuestionService {
      * @return
      */
     @Override
-    public PageinationDTO getQuestions(String userId,Integer page) {
+    public PageinationDTO getQuestions(Integer userId,Integer page) {
         Integer totalPage = getTotalPageByUserId(userId);
         //设置page的数值范围
         page = limitPage(page,totalPage);
         //获取查询页码的问题列表
         Integer offset = size * (page - 1);
-        List<Question> questions = findQurstions(userId,offset, size);
+        QuestionExample questionExample = new QuestionExample();
+        questionExample.createCriteria().andCreatorEqualTo(userId);
+        questionExample.setOrderByClause("gmt_create desc");
+        List<Question> questionList = questionMapper.selectByExampleWithRowbounds(questionExample, new RowBounds(offset, size));
         //获取pageinationDto
-        PageinationDTO pageinationDTO = getPageinationDTO(questions,page,totalPage);
+        PageinationDTO pageinationDTO = getPageinationDTO(questionList,page,totalPage);
         //返回问题列表
         return pageinationDTO;
     }
@@ -95,39 +109,18 @@ public class QuestionServiceImpl implements IQuestionService {
      * @param question
      */
     private void foundQuestion(Question question) {
-        Integer row = questionMapper.foundQuestion(question);
+        Integer row = questionMapper.insert(question);
         if (!row.equals(1)) {
             //TODO
         }
     }
-
-    /**
-     * 获取指定question
-     * @param offset
-     * @param size
-     * @return
-     */
-    private List<Question> findQurstions(Integer offset, Integer size) {
-        return questionMapper.findQuestions(offset, size);
-    }
-
-    /**
-     * 根据id查找question
-     * @param offset
-     * @param size
-     * @return
-     */
-    private List<Question> findQurstions(String userId,Integer offset, Integer size) {
-        return questionMapper.findQuestionsById(userId,offset, size);
-    }
-
     /**
      * 根据id获取用户信息
      * @param id
      * @return
      */
     private User findUserById(Integer id) {
-        User user = userMapper.findUserById(id);
+        User user = userMapper.selectByPrimaryKey(id);
         return user;
     }
 
@@ -139,8 +132,14 @@ public class QuestionServiceImpl implements IQuestionService {
     @Override
     public QuestionDTO getQuestionById(Integer id) {
         //TODO 处理异常
-        Question question = questionMapper.findQuestionByid(id);
-        User user = userMapper.findUserById(question.getCreator());
+        QuestionExample questionExample = new QuestionExample();
+        questionExample.createCriteria().andIdEqualTo(id);
+        List<Question> questionList = questionMapper.selectByExampleWithBLOBs(questionExample);
+        if (questionList.size() == 0){
+            //TODO
+        }
+        Question question = questionList.get(0);
+        User user = userMapper.selectByPrimaryKey(question.getCreator());
         QuestionDTO questionDTO = new QuestionDTO();
         BeanUtils.copyProperties(question,questionDTO);
         questionDTO.setUserAvatarUrl(user.getAvatarUrl());
@@ -153,7 +152,8 @@ public class QuestionServiceImpl implements IQuestionService {
      * @return
      */
     public Integer getTotalPage(){
-        Integer totalPage = questionMapper.findQuestionSize();
+        List<Question> questionList = questionMapper.selectByExample(new QuestionExample());
+        Integer totalPage = questionList.size();
         if (totalPage % size == 0) {
             totalPage = totalPage / size;
         } else {
@@ -166,8 +166,11 @@ public class QuestionServiceImpl implements IQuestionService {
      * 根据用户id获取分页数
      * @return
      */
-    public Integer getTotalPageByUserId(String userId){
-        Integer totalPage = questionMapper.findQuestionSizeById(userId);
+    public Integer getTotalPageByUserId(Integer userId){
+        QuestionExample questionExample = new QuestionExample();
+        questionExample.createCriteria().andCreatorEqualTo(userId);
+        List<Question> questionList = questionMapper.selectByExample(questionExample);
+        Integer totalPage = questionList.size();
         if (totalPage % size == 0) {
             totalPage = totalPage / size;
         } else {
