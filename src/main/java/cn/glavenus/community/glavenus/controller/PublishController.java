@@ -34,23 +34,6 @@ public class PublishController {
     }
 
     /**
-     * 编辑问题功能
-     * @param id
-     * @param model
-     * @return
-     */
-    @GetMapping("/publish/{id}")
-    public String edit(@PathVariable(name = "id")Integer id,
-                       Model model) {
-        QuestionDTO questionDTO  = questionServiceimpl.getQuestionById(id);
-        model.addAttribute("title",questionDTO.getTitle());
-        model.addAttribute("description",questionDTO.getDescription());
-        model.addAttribute("tag",questionDTO.getTag());
-        model.addAttribute("id",questionDTO.getId());
-        return "publish";
-    }
-
-    /**
      * 创建问题
      *
      * @param title
@@ -65,7 +48,7 @@ public class PublishController {
             @RequestParam(value = "title",required = false) String title,
             @RequestParam(value = "description",required = false) String description,
             @RequestParam(value = "tag",required = false) String tag,
-            @RequestParam(value = "id",required = false)Integer id,
+            @RequestParam(value = "id",required = false)Long id,
             HttpServletRequest request,
             Model model
     ) {
@@ -105,6 +88,24 @@ public class PublishController {
         questionServiceimpl.createQuestion(question,user);
         return "redirect:/";
     }
+
+    /**
+     * 编辑问题功能
+     * @param id
+     * @param model
+     * @return
+     */
+    @GetMapping("/publish/{id}")
+    public String edit(@PathVariable(name = "id")Long id,
+                       Model model) {
+        QuestionDTO questionDTO  = questionServiceimpl.getQuestionById(id);
+        model.addAttribute("title",questionDTO.getTitle());
+        model.addAttribute("description",questionDTO.getDescription());
+        model.addAttribute("tag",questionDTO.getTag());
+        model.addAttribute("id",questionDTO.getId());
+        return "publish";
+    }
+
 
     //回显问题页面内容
     private void setModel(Model model, String title, String description, String tag) {

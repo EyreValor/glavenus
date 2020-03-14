@@ -36,7 +36,7 @@ public class AuthorizeServiceImpl implements IAuthorizeService {
         accessTokenDTO.setCode(code);
         accessTokenDTO.setRedirect_url(redirectUrl);
         accessTokenDTO.setState(state);
-        //获取token
+        //获取accessToken
         String accessToken = githubProvider.getAccessToken(accessTokenDTO);
         if (false){
             //TODO 规划获取失败异常

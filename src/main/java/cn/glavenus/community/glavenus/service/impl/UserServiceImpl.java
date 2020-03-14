@@ -22,7 +22,7 @@ public class UserServiceImpl implements IUserService {
     private UserMapper userMapper;
 
     /**
-     * 获取本地数据库用户信息
+     * 根据accountId获取用户信息
      *
      * @param accountId
      * @return
@@ -32,8 +32,8 @@ public class UserServiceImpl implements IUserService {
         UserExample userExample = new UserExample();
         userExample.createCriteria().andAccountIdEqualTo(accountId);
         List<User> users = userMapper.selectByExample(userExample);
-        if(users.size() == 0){
-            //TODO
+        if (users.size() == 0) {
+            return null;
         }
         return users.get(0);
     }
@@ -67,10 +67,9 @@ public class UserServiceImpl implements IUserService {
      * @param accoubtId
      */
     @Override
-    public void updateToken(String token, String accoubtId) {
+    public void updateToken(User user, String token, String accoubtId) {
         UserExample userExample = new UserExample();
         userExample.createCriteria().andAccountIdEqualTo(accoubtId);
-        User user = new User();
         user.setToken(token);
         Integer row = userMapper.updateByExample(user, userExample);
         if (!row.equals(1)) {

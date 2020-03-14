@@ -22,12 +22,18 @@ public interface IQuestionService {
      * 根据userid查询数据库中的问题
      * @return
      */
-    PageinationDTO getQuestions(Integer userid,Integer page);
+    PageinationDTO getQuestions(Long userid,Integer page);
 
     /**
      * 根据问题id获取问题详情
      * @param id
      * @return
      */
-    QuestionDTO getQuestionById(Integer id);
+    QuestionDTO getQuestionById(Long id);
+
+    /**
+     * 增加问题的点赞数
+     * @param id
+     */
+    void incView(Long id);
 }

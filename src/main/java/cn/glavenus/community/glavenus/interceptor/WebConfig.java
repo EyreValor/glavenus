@@ -21,11 +21,13 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
 
+        //定义白名单
         List<String> patterns = new ArrayList<>();
         patterns.add("js/**");
         patterns.add("css/**");
         patterns.add("fonts/**");
 
+        //设置拦截
         registry.addInterceptor(sesstonInterceptor).addPathPatterns("/**").excludePathPatterns(patterns);
     }
 

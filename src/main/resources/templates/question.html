@@ -18,8 +18,8 @@
             <small class="text-muted">
                 作者: <a href="" th:text="${questionDTO.userName}">
             </a> | 发布于: <small th:text="${#dates.format(questionDTO.gmtCreate,'yyyy-MM-dd HH:mm')}">
-            </small> | 阅读数: <small>6666
-            </small> | 回复数: <small>xxxx</small>
+            </small> | 阅读数: <small th:text="${questionDTO.viewCount}">
+            </small> | 回复数: <small >xxxx</small>
             </small>
             <hr class="question-hr col-lg-12 col-md-12 col-sm12 col-xs-12">
             <div class="col-lg-12 col-md-12 col-sm12 col-xs-12">

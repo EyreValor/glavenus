@@ -25,5 +25,5 @@ public interface IUserService {
      * @param accoubtId
      * @return
      */
-    void updateToken(String token,String accoubtId);
+    void updateToken(User user,String token,String accoubtId);
 }

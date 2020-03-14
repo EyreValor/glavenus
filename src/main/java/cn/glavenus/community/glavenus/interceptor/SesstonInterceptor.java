@@ -23,7 +23,6 @@ public class SesstonInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        User user;
         Cookie[] cookies = request.getCookies();
         if (cookies!=null) {
             for (Cookie cookie : cookies) {

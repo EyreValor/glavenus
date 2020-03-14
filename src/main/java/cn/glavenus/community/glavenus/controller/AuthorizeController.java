@@ -54,7 +54,7 @@ public class AuthorizeController {
             } else {
                 //如果有创建账户  设置全新token写入账户
                 String token = UUID.randomUUID().toString();
-                userServiceimpl.updateToken(token, String.valueOf(githubUser.getId()));
+                userServiceimpl.updateToken(user,token, String.valueOf(githubUser.getId()));
                 user.setToken(token);
                 setCookie(token,response);
                 request.getSession().setAttribute("user", user);
@@ -76,8 +76,10 @@ public class AuthorizeController {
     public String logout(HttpServletRequest request,
                            HttpServletResponse response){
         Cookie newCookie = new Cookie("token",null);
+        //清除cookie
         newCookie.setMaxAge(0);
         newCookie.setPath("/");
+        //清除session
         response.addCookie(newCookie);
         request.getSession().removeAttribute("user");
         return "redirect:/";
