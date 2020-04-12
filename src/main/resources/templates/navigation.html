@@ -12,7 +12,7 @@
                                 data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
                             <span class="sr-only">Toggle navigation</span>
                         </button>
-                        <a class="navbar-brand" href="/">3DS社区</a>
+                        <a class="navbar-brand" href="/">代码101</a>
                     </div>
                     <form class="navbar-form navbar-left">
                         <div class="form-group">
@@ -23,6 +23,10 @@
                     <ul class="nav navbar-nav navbar-right">
                         <li th:if="${session.user != null}">
                             <a class="navbar-brand" href="/publish">发起提问</a>
+                        </li>
+
+                        <li th:if="${session.user != null}">
+                            <a class="navbar-brand" href="/profile/replies">通知<span class="badge">40</span></a>
                         </li>
                         <li th:if="${session.user == null}"><a
                                 href="https://github.com/login/oauth/authorize?client_id=Iv1.6c4f6f2053e11699&redirect_uri=http://localhost:8887/callback&state=1">登录</a>

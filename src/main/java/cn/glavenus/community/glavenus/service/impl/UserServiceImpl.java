@@ -1,6 +1,8 @@
 package cn.glavenus.community.glavenus.service.impl;
 
 import cn.glavenus.community.glavenus.dto.GithubUser;
+import cn.glavenus.community.glavenus.exception.CustomizeErrorCode;
+import cn.glavenus.community.glavenus.exception.CustomizeException;
 import cn.glavenus.community.glavenus.mapper.UserMapper;
 import cn.glavenus.community.glavenus.model.User;
 import cn.glavenus.community.glavenus.model.UserExample;
@@ -57,12 +59,14 @@ public class UserServiceImpl implements IUserService {
         user.setGmtModified(user.getGmtCreate());
         user.setAvatarUrl(githubUser.getAvatar_url());
         //将用户数据写入数据库
-        userMapper.insert(user);
+        int insert = userMapper.insert(user);
+        if (insert !=1){
+            throw new CustomizeException(CustomizeErrorCode.WRITE_UNKNOWN_ERROR);
+        }
     }
 
     /**
      * 根据accountId修改token
-     *
      * @param token
      * @param accoubtId
      */
@@ -73,7 +77,7 @@ public class UserServiceImpl implements IUserService {
         user.setToken(token);
         Integer row = userMapper.updateByExample(user, userExample);
         if (!row.equals(1)) {
-            //TODO
+            throw new CustomizeException(CustomizeErrorCode.WRITE_UNKNOWN_ERROR);
         }
     }
 

@@ -26,6 +26,7 @@ public class WebConfig implements WebMvcConfigurer {
         patterns.add("js/**");
         patterns.add("css/**");
         patterns.add("fonts/**");
+        patterns.add("img/**");
 
         //设置拦截
         registry.addInterceptor(sesstonInterceptor).addPathPatterns("/**").excludePathPatterns(patterns);

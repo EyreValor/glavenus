@@ -11,6 +11,7 @@ import cn.glavenus.community.glavenus.model.Question;
 import cn.glavenus.community.glavenus.model.QuestionExample;
 import cn.glavenus.community.glavenus.model.User;
 import cn.glavenus.community.glavenus.service.IQuestionService;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +19,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Creaked by EyreValor on 2020/3/2
@@ -47,7 +50,7 @@ public class QuestionServiceImpl implements IQuestionService {
     public void createQuestion(Question parameter, User user) {
         //查看问题是否存在
         if (parameter.getId() == null) {
-            //否则创建问题
+            //没有则创建问题
             parameter.setCreator(user.getId());
             parameter.setGmtCreate(System.currentTimeMillis());
             parameter.setGmtModified(parameter.getGmtCreate());
@@ -56,17 +59,23 @@ public class QuestionServiceImpl implements IQuestionService {
             parameter.setLikeCount(0);
             foundQuestion(parameter);
         } else {
-            //是则对问题进行修改
+            //有则对问题进行修改
             QuestionExample questionExample = new QuestionExample();
             questionExample.createCriteria().andIdEqualTo(parameter.getId());
             List<Question> question = questionMapper.selectByExample(questionExample);
-            if (!question.get(0).getCreator().equals(user.getId())) {
-                //TODO 创建非法参数异常错误
+            //修改的问题不存在
+            if (question.size() == 0 ) {
+                throw new CustomizeException(CustomizeErrorCode.CHANGE_QUESTION_NOT_FOUND);
+            }
+            //非法参数异常
+            if(!question.get(0).getCreator().equals(user.getId())){
+                throw new CustomizeException(CustomizeErrorCode.ILLEGAL_PARAMETER);
             }
             parameter.setGmtModified(System.currentTimeMillis());
             int row = questionMapper.updateByExample(parameter, questionExample);
+            //写入异常
             if (row != 1) {
-                //TODO 创建写入异常错误
+                throw new CustomizeException(CustomizeErrorCode.WRITE_UNKNOWN_ERROR);
             }
         }
     }
@@ -118,8 +127,6 @@ public class QuestionServiceImpl implements IQuestionService {
         return pageinationDTO;
     }
 
-
-
     /**
      * 根据问题id获取问题详情
      * @param id
@@ -139,12 +146,38 @@ public class QuestionServiceImpl implements IQuestionService {
         return questionDTO;
     }
 
+    /**
+     * 增加浏览数
+     * @param id
+     */
     @Override
     public void incView(Long id) {
         Question question = new Question();
         question.setId(id);
         question.setViewCount(1);
-        Integer integer = questionExtMapper.incView(question);
+        questionExtMapper.incView(question);
+    }
+
+    @Override
+    public List<QuestionDTO> getRelatedQuestion(QuestionDTO questionDTOParameter) {
+        if (StringUtils.isBlank(questionDTOParameter.getTag())){
+            return new ArrayList<>();
+        }
+
+        String [] tags = StringUtils.split(questionDTOParameter.getTag(),",");
+        //拼接字符串
+        String regexpTag = Arrays.stream(tags).collect(Collectors.joining("|"));
+        Question question = new Question();
+        question.setId(questionDTOParameter.getId());
+        question.setTag(regexpTag);
+
+        List<Question> questions = questionExtMapper.selectRelated(question);
+        List<QuestionDTO> questionDTOS = questions.stream().map(q->{
+            QuestionDTO questionDTO = new QuestionDTO();
+            BeanUtils.copyProperties(q,questionDTO);
+            return questionDTO;
+        }).collect(Collectors.toList());
+        return questionDTOS;
     }
 
     /**

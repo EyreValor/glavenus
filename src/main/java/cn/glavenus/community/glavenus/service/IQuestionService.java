@@ -5,6 +5,8 @@ import cn.glavenus.community.glavenus.dto.QuestionDTO;
 import cn.glavenus.community.glavenus.model.Question;
 import cn.glavenus.community.glavenus.model.User;
 
+import java.util.List;
+
 public interface IQuestionService {
 
     /**
@@ -36,4 +38,6 @@ public interface IQuestionService {
      * @param id
      */
     void incView(Long id);
+
+    List<QuestionDTO> getRelatedQuestion(QuestionDTO questionDTO);
 }

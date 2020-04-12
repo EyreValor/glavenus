@@ -8,12 +8,12 @@ import lombok.Data;
  */
 @Data
 public class QuestionDTO {
-    private Long id;
+    private long id;
     private String title;
     private String description;
     private long gmtCreate;
     private long gmtModified;
-    private Integer creator;
+    private long creator;
     private Integer commentCount;
     private Integer viewCount;
     private Integer likeCount;

@@ -1,11 +1,13 @@
 package cn.glavenus.community.glavenus.controller;
 
+import cn.glavenus.community.glavenus.cache.TagCache;
 import cn.glavenus.community.glavenus.dto.PageinationDTO;
 import cn.glavenus.community.glavenus.dto.QuestionDTO;
 import cn.glavenus.community.glavenus.model.Question;
 import cn.glavenus.community.glavenus.model.User;
 import cn.glavenus.community.glavenus.service.IQuestionService;
 import cn.glavenus.community.glavenus.service.IUserService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,7 +31,8 @@ public class PublishController {
     private IQuestionService questionServiceimpl;
 
     @GetMapping("/publish")
-    public String publish() {
+    public String publish(Model model) {
+        model.addAttribute("tags", TagCache.get());
         return "publish";
     }
 
@@ -45,15 +48,14 @@ public class PublishController {
      */
     @PostMapping("/publish")
     public String doPublish(
-            @RequestParam(value = "title",required = false) String title,
-            @RequestParam(value = "description",required = false) String description,
-            @RequestParam(value = "tag",required = false) String tag,
-            @RequestParam(value = "id",required = false)Long id,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "tag", required = false) String tag,
+            @RequestParam(value = "id", required = false) Long id,
             HttpServletRequest request,
             Model model
     ) {
         User user = (User) request.getSession().getAttribute("user");
-
         //TODO 处理异常后期移动到前端控制
         if (user == null) {
             model.addAttribute("error", "用户未登录");
@@ -78,31 +80,39 @@ public class PublishController {
             setModel(model, title, description, tag);
             return "publish";
         }
+        String invalid = TagCache.filterInvalid(tag);
+        if (StringUtils.isNotBlank(invalid)){
+            model.addAttribute("error", "输入非法标签"+invalid);
+            setModel(model, title, description, tag);
+            return "publish";
+        }
 
-        Question question = new Question();
+            Question question = new Question();
         question.setTitle(title);
         question.setDescription(description);
         question.setTag(tag);
         question.setId(id);
         //创建提问
-        questionServiceimpl.createQuestion(question,user);
+        questionServiceimpl.createQuestion(question, user);
         return "redirect:/";
     }
 
     /**
      * 编辑问题功能
+     *
      * @param id
      * @param model
      * @return
      */
     @GetMapping("/publish/{id}")
-    public String edit(@PathVariable(name = "id")Long id,
+    public String edit(@PathVariable(name = "id") Long id,
                        Model model) {
-        QuestionDTO questionDTO  = questionServiceimpl.getQuestionById(id);
-        model.addAttribute("title",questionDTO.getTitle());
-        model.addAttribute("description",questionDTO.getDescription());
-        model.addAttribute("tag",questionDTO.getTag());
-        model.addAttribute("id",questionDTO.getId());
+        QuestionDTO questionDTO = questionServiceimpl.getQuestionById(id);
+        model.addAttribute("title", questionDTO.getTitle());
+        model.addAttribute("description", questionDTO.getDescription());
+        model.addAttribute("tag", questionDTO.getTag());
+        model.addAttribute("id", questionDTO.getId());
+        model.addAttribute("tags", TagCache.get());
         return "publish";
     }
 
@@ -112,5 +122,7 @@ public class PublishController {
         model.addAttribute("title", title);
         model.addAttribute("description", description);
         model.addAttribute("tag", tag);
+        model.addAttribute("tags", TagCache.get());
+
     }
 }

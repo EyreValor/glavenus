@@ -2,13 +2,22 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>社区</title>
+    <title>代码101</title>
     <link rel="stylesheet" href="/css/bootstrap.min.css"/>
     <link rel="stylesheet" href="/css/bootstrap-theme.min.css"/>
     <link rel="stylesheet" href="/css/community.css"/>
     <script src="/js/jquery-1.9.1.js"></script>
     <script src="/js/bootstrap.min.js" type="application/javascript"></script>
 </head>
+<script type="application/javascript">    
+    window.onload = function () {
+        let open = window.localStorage.getItem("open");
+        if (open == "true"){
+            window.close();
+            window.localStorage.removeItem("open");
+        }
+    }
+</script>
 <body>
 <div th:include="navigation::navigation"></div>
 <div class="container-fluid main">
@@ -62,7 +71,7 @@
             </nav>
         </div>
         <div class="col-lg-3 col-md-12 col-sm12 col-xs-12">
-
+            <a href="rest.html">rest</a>
         </div>
     </div>
 </div>
